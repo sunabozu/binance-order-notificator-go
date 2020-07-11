@@ -35,7 +35,11 @@ func main() {
 		for {
 			time.Sleep(time.Minute * 10)
 			log.Println("updating the listenKey...")
-			client.NewKeepaliveUserStreamService().Do(context.Background())
+			err := client.NewKeepaliveUserStreamService().Do(context.Background())
+
+			if err != nil {
+				log.Println(err)
+			}
 		}
 	}()
 
