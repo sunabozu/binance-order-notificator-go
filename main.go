@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/sunabozu/binance-price-change-go/utils"
 
@@ -29,14 +30,25 @@ func main() {
 	client := binance.NewClient(keys.BinanceKey, keys.BinanceSecret)
 	listenKey, err := client.NewStartUserStreamService().Do(context.Background())
 
+	// update the listenKey evey once in a while, see https://github.com/binance-exchange/binance-official-api-docs/blob/master/user-data-stream.md#pingkeep-alive-a-listenkey
+	go func() {
+		for {
+			time.Sleep(time.Minute * 10)
+			client.NewKeepaliveUserStreamService().Do(context.Background())
+		}
+	}()
+
 	log.Printf("%+v", listenKey)
 
 	wsHandler := func(message []byte) {
 		var userData map[string]interface{}
 
 		if err := json.Unmarshal(message, &userData); err != nil {
-			panic(err)
+			log.Println(err)
+			return
 		}
+
+		log.Println(userData["e"], userData["X"], userData["x"])
 
 		if userData["e"] != "executionReport" || userData["X"] != "FILLED" {
 			return
@@ -83,9 +95,9 @@ func main() {
 	}
 
 	errHandler := func(err error) {
-		fmt.Println(err)
+		log.Printf("error in the handler: %+v", err)
 	}
 
 	doneC, _, err := binance.WsUserDataServe(listenKey, wsHandler, errHandler)
-	<-doneC
+	log.Printf("a channel: %+v\n error: %+v\n", <-doneC, err)
 }
