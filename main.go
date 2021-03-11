@@ -86,9 +86,9 @@ func main() {
 		content := fmt.Sprintf("%.6f %s (%s%s)", quantity, symbol, currency, usdValueStr)
 
 		if side == "BUY" {
-			content += " was BOUGHT"
+			content += " was BOUGHT "
 		} else {
-			content += " was SOLD"
+			content += " was SOLD "
 			emoji = "✅✅✅"
 		}
 
